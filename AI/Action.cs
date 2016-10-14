@@ -10,7 +10,9 @@
         MAKEFRIENDS,
         REPRODUCE,
         HELP,
-        WORK
+        WORK,
+        STEAL,
+        STUDY
 
     }
 }
