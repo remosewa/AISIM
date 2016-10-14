@@ -1,0 +1,14 @@
+c:\users\chawilso\documents\visual studio 2015\Projects\AI\AI\bin\Debug\AI.exe.config
+c:\users\chawilso\documents\visual studio 2015\Projects\AI\AI\bin\Debug\AI.exe
+c:\users\chawilso\documents\visual studio 2015\Projects\AI\AI\bin\Debug\AI.pdb
+c:\users\chawilso\documents\visual studio 2015\Projects\AI\AI\obj\Debug\AI.csprojResolveAssemblyReference.cache
+c:\users\chawilso\documents\visual studio 2015\Projects\AI\AI\obj\Debug\MainWindow.g.cs
+c:\users\chawilso\documents\visual studio 2015\Projects\AI\AI\obj\Debug\App.g.cs
+c:\users\chawilso\documents\visual studio 2015\Projects\AI\AI\obj\Debug\AI_MarkupCompile.cache
+c:\users\chawilso\documents\visual studio 2015\Projects\AI\AI\obj\Debug\AI_MarkupCompile.lref
+c:\users\chawilso\documents\visual studio 2015\Projects\AI\AI\obj\Debug\MainWindow.baml
+c:\users\chawilso\documents\visual studio 2015\Projects\AI\AI\obj\Debug\AI.g.resources
+c:\users\chawilso\documents\visual studio 2015\Projects\AI\AI\obj\Debug\AI.Properties.Resources.resources
+c:\users\chawilso\documents\visual studio 2015\Projects\AI\AI\obj\Debug\AI.csproj.GenerateResource.Cache
+c:\users\chawilso\documents\visual studio 2015\Projects\AI\AI\obj\Debug\AI.exe
+c:\users\chawilso\documents\visual studio 2015\Projects\AI\AI\obj\Debug\AI.pdb
