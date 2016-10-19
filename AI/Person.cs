@@ -48,13 +48,13 @@ namespace AI
                 gender = Gender.Female;
             }
             
-            if (age == 0)
+            if (parent1 != null && parent2 != null)
             {  
                 GenerateTendencies(parent1, parent2);
             }
             else
             {
-                GenerateTendencies(true);
+                GenerateTendencies();
                 //TODO: randomize stats
             }
             if (parent1 != null)
@@ -104,28 +104,20 @@ namespace AI
                 {
                     lowerBounds = 1;
                 }
-
-                if (action == Action.REPRODUCE && age < 16)
-                {
-                    continue;
-                }
-                int neg = 1;
-                if (age < 5 && !(new[] {Action.EAT, Action.SLEEP}).Contains(action))
-                {
-                    neg = -1;
-                }
-                else if (age < 16 && !(new[] { Action.EAT, Action.SLEEP, Action.COMMUNICATE, Action.MAKEFRIENDS, Action.STUDY,  }).Contains(action))
-                {
-                    neg = -1;
-                }
-                int count = rnd.Next(lowerBounds, 11);
-                if (neg == 1)
-                {
-                    AddTendency(action, count);
-                }
                 
-                tendencyMap[action] = count*neg;
+                int count = rnd.Next(lowerBounds, 11);
+                AddTendency(action, count);
+            }
+            Shuffle(tendency);
+        }
 
+        //instead of creating tendencies randomly, generated them from the average of the two parents.
+        private void GenerateTendencies(Person parent1, Person parent2)
+        {
+            foreach (Action action in Enum.GetValues(typeof(Action)))
+            {
+                var avg = (parent1.tendencyMap[action] + parent2.tendencyMap[action])/2;
+                AddTendency(action, avg);
             }
             Shuffle(tendency);
         }
@@ -192,12 +184,106 @@ namespace AI
 
         private void Steal()
         {
-            throw new NotImplementedException();
+            var wealthyList = new List<Person>();
+            wealthyList.AddRange(family);
+            wealthyList.AddRange(friends);
+            wealthyList.Sort(delegate(Person a, Person b)
+            {
+                if (a.wealth > b.wealth)
+                {
+                    return -1;
+                }
+                if (a.wealth < b.wealth)
+                {
+                    return 1;
+                }
+                return 0;
+            });
+            var topList = wealthyList.Take(10).ToList();
+            topList.Sort(delegate(Person a, Person b)
+            {
+                var helpReceivedFromA = helpReceivedMap.ContainsKey(a) ? helpReceivedMap[a] : 0;
+                var helpReceivedFromB = helpReceivedMap.ContainsKey(b) ? helpReceivedMap[b] : 0;
+
+                if (helpReceivedFromA > helpReceivedFromB)
+                {
+                    return 1;
+                }
+                if (helpReceivedFromA < helpReceivedFromB)
+                {
+                    return -1;
+                }
+                return 0;
+            });
+            var personToStealFrom = topList.Last();
+            for (int i = 0; i < 9; i += 1)
+            {
+                if (rnd.Next(10) < 2) //20% chance to steal from this person.
+                {
+                    personToStealFrom = topList[i];
+                    break;
+                }
+            }
+            if (personToStealFrom.wealth > 0)
+            {
+                actionRemaining = 2; //three hours to steal. current hour, + 2 more
+                var tempSkill = skill > 100 ? 100 : skill;
+                var otherSkill = personToStealFrom.skill > 100 ? 100 : personToStealFrom.skill;
+                tempSkill = tempSkill + rnd.Next(-20, 21);
+                var odds = tempSkill - otherSkill;
+                bool isCaught = rnd.Next(100) > odds;
+                int wealthToSteal = (int)((rnd.Next(10, 91) / 100.00) * personToStealFrom.wealth); //steal 10 - 90% of their wealth
+                if (isCaught) //if you're caught, lose a third of your booty
+                {
+                    wealthToSteal = wealthToSteal/3;
+                    personToStealFrom.health -= rnd.Next(0, (int)strength);
+                    health -= rnd.Next(0, (int) personToStealFrom.strength);
+                    if (personToStealFrom.health < 0)
+                    {
+                        controller.kill(personToStealFrom, this);
+                    }
+                    if (health < 0)
+                    {
+                        controller.die(this);
+                    }
+                    if (rnd.Next(100) > 50 && tendency.Contains(Action.STEAL)) //50 % chance if they are unsuccessful they might remove this as a tendency.
+                    {
+                        if (health < 10)//if health drops below 10% then we will never steal again.
+                        {
+                            tendency.RemoveAll(delegate(Action aciton)
+                            {
+                                return aciton == Action.STEAL;
+                            });
+                        }
+                        else
+                        {
+                            tendency.Remove(Action.STEAL);
+                        }
+                        
+                        tendencyMap[Action.STEAL] -= 1;
+                    }
+
+                }
+                else
+                {
+                    if (rnd.Next(100) > 50) //50 % chance if they are successful they might add this as a tendency.
+                    {
+                        tendency.Add(Action.STEAL);
+                        tendencyMap[Action.STEAL] += 1;
+                    }
+                }
+                personToStealFrom.wealth -= wealthToSteal;
+                wealth += wealthToSteal;
+                if( skill < 100) skill += 1; //learned a little how to steal.
+            }
+            
+
         }
 
         private void Study()
         {
-            throw new NotImplementedException();
+            skill += 1;
+            actionRemaining = 1;
         }
 
         private void ValidateStats()
@@ -212,14 +298,36 @@ namespace AI
                 int count = tendencyMap[action]*-1;
                 AddTendency(action, count);
             }
+            else
+            {
+                throw new ArgumentException("action " + action + " is already enabled.");
+            }
         }
 
         private void AddTendency(Action action, int count)
         {
-            for (var i = 0; i < count; i += 1)
+            if (tendency.Contains(action))
             {
-                tendency.Add(action);
+                throw new ArgumentException("action " + action + " has already been added.");
             }
+            int neg = 1;
+            if (age < 5 && !(new[] { Action.EAT, Action.SLEEP }).Contains(action))
+            {
+                neg = -1;
+            }
+            else if (age < 16 && !(new[] { Action.EAT, Action.SLEEP, Action.COMMUNICATE, Action.MAKEFRIENDS, Action.STUDY, }).Contains(action))
+            {
+                neg = -1;
+            }
+            if (neg == 1)
+            {
+                for (var i = 0; i < count; i += 1)
+                {
+                    tendency.Add(action);
+                }
+            }
+            tendencyMap[action] = count * neg;
+            
         }
 
         private void ComputeAgeStuff()
@@ -343,7 +451,7 @@ namespace AI
 
         private void Workout()
         {
-            actionRemaining = 2;
+            actionRemaining = 1;
             health += 2;
             strength += 2;
             hunger += 2;
